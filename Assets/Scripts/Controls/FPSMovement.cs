@@ -108,7 +108,7 @@ public class FPSMovement : MonoBehaviour
     }
 
     public void Move() {
-        Debug.Log($"{_moveDirection} * {_moveSpeed} * {Time.deltaTime}");
+        // Debug.Log($"{_moveDirection} * {_moveSpeed} * {Time.deltaTime}");
         Vector3 worldMove = transform.right * _moveDirection.x + transform.forward * _moveDirection.y;
 
         _ctrl.Move(worldMove * _moveSpeed * Time.deltaTime);
@@ -116,23 +116,43 @@ public class FPSMovement : MonoBehaviour
         _ctrl.Move(_velocity * Time.deltaTime);
     }
 
+    private float ClampAngle(float angle, float from, float to)
+    {
+        // accepts e.g. -80, 80
+        if (angle < 0f) {
+            angle = 360 + angle;
+        }
+        if (angle > 180f) {
+            return Mathf.Max(angle, 360+from);
+        }
+        return Mathf.Min(angle, to);
+    }
+
     public void OnLook(InputAction.CallbackContext context) {
         if (Cursor.lockState == CursorLockMode.None) {
             return;
         }
 
-        // Y Look
+        // Confusingly, X Mouse movement translates to Rotation around the Y Axis and vice versa
+
+        // Y Rotation
         Vector2 lookDir = context.ReadValue<Vector2>();
         transform.Rotate(new Vector3(0f, lookDir.x * sensitivity * Time.deltaTime, 0f));
 
-        // X look
-        Vector3 camAngle = _cam.transform.rotation.eulerAngles;
-        camAngle.y = Mathf.Clamp(camAngle.y, -90f, 90f);
+        // X Rotation
         _cam.transform.Rotate(new Vector3(-lookDir.y * sensitivity * Time.deltaTime, 0f, 0f));
+
+        // Clamp Y look
+        Vector3 camRotation = _cam.transform.rotation.eulerAngles;
+        Debug.Log(ClampAngle(camRotation.x, -90f, 90f));
+        // _cam.transform.rotation = Quaternion.Euler(
+        //     camRotation.x,
+        //     camRotation.y,
+        //     camRotation.z
+        // );
     }
 
     public void OnJump(InputAction.CallbackContext context) {
-        Debug.Log("I JUMPED!");
         if (_isGrounded) {
             _velocity.y = Mathf.Sqrt(jumpHeight * 2 * _gravity);
         }
