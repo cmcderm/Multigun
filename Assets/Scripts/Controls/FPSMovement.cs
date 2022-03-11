@@ -32,7 +32,10 @@ public class FPSMovement : MonoBehaviour
     private LayerMask groundMask;
 
     private Vector2 _moveDirection;
+    private Vector2 _lookDir;
     private bool _isGrounded;
+
+    private float camVertRotation = 0f;
 
     private float _stepHeight; 
 
@@ -67,16 +70,19 @@ public class FPSMovement : MonoBehaviour
         procGravity();
         Move();
 
-        // Get current mouse+keyboard
-        Mouse mouse = Mouse.current;
-        Keyboard keyboard = Keyboard.current;
-
         // Lock/Free Mouse
-        if (mouse.leftButton.wasPressedThisFrame) {
+        if (Mouse.current.leftButton.wasPressedThisFrame) {
             Cursor.lockState = CursorLockMode.Locked;
-        } else if (keyboard.escapeKey.wasPressedThisFrame) {
+        } else if (Keyboard.current.escapeKey.wasPressedThisFrame) {
             Cursor.lockState = CursorLockMode.None;
         }
+    }
+
+    void FixedUpdate() {
+        updateGrounded();
+        procGravity();
+        Look();
+        Move();
     }
 
     private void OnDrawGizmos() {
@@ -116,40 +122,24 @@ public class FPSMovement : MonoBehaviour
         _ctrl.Move(_velocity * Time.deltaTime);
     }
 
-    private float ClampAngle(float angle, float from, float to)
-    {
-        // accepts e.g. -80, 80
-        if (angle < 0f) {
-            angle = 360 + angle;
-        }
-        if (angle > 180f) {
-            return Mathf.Max(angle, 360+from);
-        }
-        return Mathf.Min(angle, to);
-    }
-
     public void OnLook(InputAction.CallbackContext context) {
         if (Cursor.lockState == CursorLockMode.None) {
             return;
         }
 
-        // Confusingly, X Mouse movement translates to Rotation around the Y Axis and vice versa
+        _lookDir = context.ReadValue<Vector2>();
+    }
 
+    public void Look() {
+        // Confusingly, X Mouse movement translates to Rotation around the Y Axis and vice versa
         // Y Rotation
-        Vector2 lookDir = context.ReadValue<Vector2>();
-        transform.Rotate(new Vector3(0f, lookDir.x * sensitivity * Time.deltaTime, 0f));
+        transform.Rotate(new Vector3(0f, _lookDir.x * sensitivity * Time.deltaTime, 0f));
 
         // X Rotation
-        _cam.transform.Rotate(new Vector3(-lookDir.y * sensitivity * Time.deltaTime, 0f, 0f));
+        camVertRotation = Mathf.Clamp(camVertRotation -= _lookDir.y * sensitivity * Time.deltaTime, -90f, 90f);
+        _cam.transform.localRotation = Quaternion.Euler(camVertRotation, 0f, 0f);
 
-        // Clamp Y look
-        Vector3 camRotation = _cam.transform.rotation.eulerAngles;
-        Debug.Log(ClampAngle(camRotation.x, -90f, 90f));
-        // _cam.transform.rotation = Quaternion.Euler(
-        //     camRotation.x,
-        //     camRotation.y,
-        //     camRotation.z
-        // );
+        _lookDir = Vector2.zero;
     }
 
     public void OnJump(InputAction.CallbackContext context) {
