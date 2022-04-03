@@ -33,6 +33,7 @@ public class FPSMovement : MonoBehaviour
 
     private Vector2 _moveDirection;
     private Vector2 _lookDir;
+    private Vector2 _lastMousePosition;
     private bool _isGrounded;
 
     private float camVertRotation = 0f;
@@ -45,6 +46,9 @@ public class FPSMovement : MonoBehaviour
         _input.Player.Movement.performed += OnMovement;
         _input.Player.Look.performed += OnLook;
         _input.Player.Jump.performed += OnJump;
+        _input.Player.Fire.performed += OnFire;
+
+        _lastMousePosition = Vector2.zero;
     }
 
     private void OnEnable() {
@@ -127,34 +131,27 @@ public class FPSMovement : MonoBehaviour
             return;
         }
 
-        _lookDir = context.ReadValue<Vector2>();
+        this._lookDir = context.ReadValue<Vector2>();
+        Debug.Log(_lookDir);
 
         // Confusingly, X Mouse movement translates to Rotation around the Y Axis and vice versa
         // Y Rotation
-        transform.Rotate(new Vector3(0f, _lookDir.x * sensitivity * Time.deltaTime, 0f));
+        transform.Rotate(new Vector3(0f, this._lookDir.x * sensitivity * Time.deltaTime, 0f));
 
         // X Rotation
-        camVertRotation = Mathf.Clamp(camVertRotation - _lookDir.y * sensitivity * Time.deltaTime, -90f, 90f);
-        _cam.transform.localRotation = Quaternion.Euler(camVertRotation, 0f, 0f);
+        camVertRotation = Mathf.Clamp(camVertRotation - this._lookDir.y * sensitivity * Time.deltaTime, -90f, 90f);
+        this._cam.transform.localRotation = Quaternion.Euler(camVertRotation, 0f, 0f);
 
-        _lookDir = Vector2.zero;
-    }
-
-    public void Look() {
-        // Confusingly, X Mouse movement translates to Rotation around the Y Axis and vice versa
-        // Y Rotation
-        transform.Rotate(new Vector3(0f, _lookDir.x * sensitivity * Time.deltaTime, 0f));
-
-        // X Rotation
-        camVertRotation = Mathf.Clamp(camVertRotation - _lookDir.y * sensitivity * Time.deltaTime, -90f, 90f);
-        _cam.transform.localRotation = Quaternion.Euler(camVertRotation, 0f, 0f);
-
-        _lookDir = Vector2.zero;
+        this._lookDir = Vector2.zero;
     }
 
     public void OnJump(InputAction.CallbackContext context) {
         if (_isGrounded) {
             _velocity.y = Mathf.Sqrt(jumpHeight * 2 * _gravity);
         }
+    }
+
+    public void OnFire(InputAction.CallbackContext context) {
+        
     }
 }
