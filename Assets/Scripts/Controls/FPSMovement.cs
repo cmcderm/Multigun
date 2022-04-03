@@ -81,7 +81,7 @@ public class FPSMovement : MonoBehaviour
     void FixedUpdate() {
         updateGrounded();
         procGravity();
-        Look();
+        // Look();
         Move();
     }
 
@@ -128,6 +128,16 @@ public class FPSMovement : MonoBehaviour
         }
 
         _lookDir = context.ReadValue<Vector2>();
+
+        // Confusingly, X Mouse movement translates to Rotation around the Y Axis and vice versa
+        // Y Rotation
+        transform.Rotate(new Vector3(0f, _lookDir.x * sensitivity * Time.deltaTime, 0f));
+
+        // X Rotation
+        camVertRotation = Mathf.Clamp(camVertRotation - _lookDir.y * sensitivity * Time.deltaTime, -90f, 90f);
+        _cam.transform.localRotation = Quaternion.Euler(camVertRotation, 0f, 0f);
+
+        _lookDir = Vector2.zero;
     }
 
     public void Look() {
@@ -136,7 +146,7 @@ public class FPSMovement : MonoBehaviour
         transform.Rotate(new Vector3(0f, _lookDir.x * sensitivity * Time.deltaTime, 0f));
 
         // X Rotation
-        camVertRotation = Mathf.Clamp(camVertRotation -= _lookDir.y * sensitivity * Time.deltaTime, -90f, 90f);
+        camVertRotation = Mathf.Clamp(camVertRotation - _lookDir.y * sensitivity * Time.deltaTime, -90f, 90f);
         _cam.transform.localRotation = Quaternion.Euler(camVertRotation, 0f, 0f);
 
         _lookDir = Vector2.zero;
